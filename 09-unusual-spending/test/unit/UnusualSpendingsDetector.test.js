@@ -37,10 +37,12 @@ describe("UnusualSpendingsDetector", () => {
   });
 
   function returnMockPaymentsForDates(_userId, startDate, endDate) {
-    const isCurrentMonthDates =
-      startDate === new Date("2022-07-01") &&
-      endDate === new Date("2022-07-28");
-    if (isCurrentMonthDates) {
+    const startDateIsCurrentMonthStartDate =
+      startDate.getTime() === new Date("2022-07-01T00:00:00").getTime();
+    const endDateIsCurrentMonthEndDate =
+      endDate.getTime() === new Date("2022-07-28T00:00:00").getTime();
+
+    if (startDateIsCurrentMonthStartDate && endDateIsCurrentMonthEndDate) {
       return [
         {
           price: 14800,
@@ -52,12 +54,17 @@ describe("UnusualSpendingsDetector", () => {
           description: "Payment description",
           category: "travel",
         },
+        {
+          price: 1000,
+          description: "Mercadona",
+          category: "supermarket"
+        }
       ];
     }
 
     const isPreviousMonthDates =
-      startDate === new Date("2022-06-01") &&
-      endDate === new Date("2022-06-30");
+      startDate.getTime() === new Date("2022-06-01T00:00:00").getTime() &&
+      endDate.getTime() === new Date("2022-06-30T00:00:00").getTime();
     if (isPreviousMonthDates) {
       return [
         {

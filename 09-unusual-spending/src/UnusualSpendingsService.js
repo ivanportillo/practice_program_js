@@ -5,7 +5,7 @@ export class UnusualSpendingsService {
   }
 
   alert(userId) {
-    const unusualSpendings = this.unusualSpendingsDetector(userId);
+    const unusualSpendings = this.unusualSpendingsDetector.detect(userId);
     this.alertSender.sendAlert(userId, unusualSpendings);
   }
 }
