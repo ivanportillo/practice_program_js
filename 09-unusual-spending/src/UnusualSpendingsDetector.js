@@ -8,17 +8,18 @@ export class UnusualSpendingsDetector {
     const date = this.calendar.getDate();
     const year = date.getFullYear();
     const month = date.getMonth();
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month, date.getDate());
+    const currentStartDate = new Date(year, month, 1);
+    const currentEndDate = new Date(year, month, date.getDate());
 
     const previousStartDate = new Date(year, month - 1);
     const previousEndDate = new Date(year, month, 0);
 
-    const payments = this.paymentsRepository.getPaymentsBetweenDates(userId, startDate, endDate);
+    const currentPayments = this.paymentsRepository.getPaymentsBetweenDates(userId, currentStartDate, currentEndDate);
     const previousPayments = this.paymentsRepository.getPaymentsBetweenDates(userId, previousStartDate, previousEndDate);
+    
+    const aggregatedCurrentPayments = this.aggregatePayments(currentPayments);
 
-
-    const unusualSpendings = payments.filter(payment => {
+    const unusualSpendings = aggregatedCurrentPayments.filter(payment => {
       const paymentWithSameCategory = previousPayments.find(previousPayment => previousPayment.category === payment.category);
       if (paymentWithSameCategory) {
         const increase = payment.price - paymentWithSameCategory.price;
@@ -30,5 +31,30 @@ export class UnusualSpendingsDetector {
     });
     
     return unusualSpendings;
+  }
+
+  aggregatePayments = (payments) => {
+    return payments.reduce((acc, current) => {
+      const categoryPaymentIndex = acc.findIndex(aggregate => aggregate.category === current.category)
+      if(categoryPaymentIndex > -1) {
+        const existingAggregatedPayment = acc[categoryPaymentIndex];
+        return [
+          ...acc.slice(0, categoryPaymentIndex),
+          {
+            ...existingAggregatedPayment,
+            price: existingAggregatedPayment.price + current.price
+          },
+          ...acc.slice(categoryPaymentIndex + 1),
+        ];
+      }
+
+      return [
+        ...acc,
+        {
+          category: current.category,
+          price: current.price
+        }
+      ]
+    }, [])
   }
 }
