@@ -24,34 +24,14 @@ describe("UnusualSpendingsDetector", () => {
   it("should detect unusual spendings", () => {
     calendar.getDate.mockReturnValue(new Date("2022-07-28"));
     const currentMonthPayments = [
-      {
-        price: 14800,
-        description: "Payment description",
-        category: "groceries",
-      },
-      {
-        price: 92800,
-        description: "Payment description",
-        category: "travel",
-      },
-      {
-        price: 1000,
-        description: "Mercadona",
-        category: "supermarket"
-      }
+      aPayment({ price: 14800, category: "groceries" }),
+      aPayment({ price: 92800, category: "travel" }),
+      aPayment({ price: 1000, category: "supermarket" })
     ];
 
     const previousMonthPayments = [
-      {
-        price: 6000,
-        description: "Payment description",
-        category: "groceries",
-      },
-      {
-        price: 40000,
-        description: "Payment description",
-        category: "travel",
-      },
+      aPayment({ price: 600, category: "groceries" }),
+      aPayment({ price: 40000, category: "travel" }),
     ];
     paymentsRepository.getPaymentsBetweenDates.mockImplementation(
       getPaymentRepository({ previousMonthPayments, currentMonthPayments })
@@ -72,39 +52,15 @@ describe("UnusualSpendingsDetector", () => {
   it('should detect unusual spendings when there are more than one spendings per category', () => {
     calendar.getDate.mockReturnValue(new Date("2022-07-28"));
     const currentMonthPayments = [
-      {
-        price: 5000,
-        description: "First groceries payment",
-        category: "groceries",
-      },
-      {
-        price: 4000,
-        description: "Second groceries payment",
-        category: "groceries",
-      },
-      {
-        price: 100,
-        description: "Payment description",
-        category: "travel",
-      },
-      {
-        price: 1000,
-        description: "Mercadona",
-        category: "supermarket"
-      }
+      aPayment({ price: 5000, category: "groceries" }),
+      aPayment({ price: 4000, category: "groceries" }),
+      aPayment({ price: 100, category: "travel" }),
+      aPayment({ price: 1000, category: "supermarket" }),
     ];
 
     const previousMonthPayments = [
-      {
-        price: 6000,
-        description: "First previous",
-        category: "groceries",
-      },
-      {
-        price: 40000,
-        description: "Payment description",
-        category: "travel",
-      },
+      aPayment({ price: 6000, category: "groceries" }),
+      aPayment({ price: 40000, category: "travel" }),
     ]
     paymentsRepository.getPaymentsBetweenDates.mockImplementation(
       getPaymentRepository({ previousMonthPayments, currentMonthPayments })
@@ -135,5 +91,13 @@ const getPaymentRepository = ({ previousMonthPayments, currentMonthPayments }) =
     endDate.getTime() === new Date("2022-06-30T00:00:00").getTime();
   if (isPreviousMonthDates) {
     return previousMonthPayments;
+  }
+}
+
+function aPayment({ price, category }) {
+  return {
+    price,
+    description: "Payment description",
+    category,
   }
 }
