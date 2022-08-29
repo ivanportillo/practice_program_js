@@ -18,19 +18,22 @@ export class UnusualSpendingsDetector {
     const previousPayments = this.paymentsRepository.getPaymentsBetweenDates(userId, previousStartDate, previousEndDate);
     
     const aggregatedCurrentPayments = this.aggregatePayments(currentPayments);
+    const aggregatedPreviousPayments = this.aggregatePayments(previousPayments);
 
-    const unusualSpendings = aggregatedCurrentPayments.filter(payment => {
-      const paymentWithSameCategory = previousPayments.find(previousPayment => previousPayment.category === payment.category);
+    return this.findUnusualSpendings(aggregatedCurrentPayments, aggregatedPreviousPayments);
+  }
+
+  findUnusualSpendings = (aggregatedCurrentPayments, aggregatedPreviousPayments) => {
+    return aggregatedCurrentPayments.filter(payment => {
+      const paymentWithSameCategory = aggregatedPreviousPayments.find(previousPayment => previousPayment.category === payment.category);
       if (paymentWithSameCategory) {
         const increase = payment.price - paymentWithSameCategory.price;
-       const incrementPercentage = (increase / paymentWithSameCategory.price) * 100;
+       const incrementPercentage = (increase / Math.abs(paymentWithSameCategory.price)) * 100;
        return incrementPercentage >= 50;
       }
 
       return false;
     });
-    
-    return unusualSpendings;
   }
 
   aggregatePayments = (payments) => {

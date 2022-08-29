@@ -1,4 +1,5 @@
 import { UnusualSpendingsDetector } from "../../src/UnusualSpendingsDetector";
+import { getPaymentRepository } from "../utils/getPaymentRepository";
 
 describe("UnusualSpendingsDetector", () => {
   const userId = "userId";
@@ -19,7 +20,32 @@ describe("UnusualSpendingsDetector", () => {
       paymentsRepository,
       calendar
     );
-  })
+  });
+
+  it('returns empty array when there is no payments', () => {
+    calendar.getDate.mockReturnValue(new Date("2022-07-28"));
+    paymentsRepository.getPaymentsBetweenDates.mockImplementation(
+      getPaymentRepository({ previousMonthPayments: [], currentMonthPayments: [] })
+    );
+
+    expect(unusualSpendingsDetector.detect(userId)).toEqual([]);
+  });
+
+  it("returns empty array when there is no unusual spendings", () => {
+    calendar.getDate.mockReturnValue(new Date("2022-07-28"));
+    const currentMonthPayments = [
+      aPayment({ price: 500, category: "groceries" }),
+    ];
+
+    const previousMonthPayments = [
+      aPayment({ price: 600, category: "groceries" }),
+    ];
+    paymentsRepository.getPaymentsBetweenDates.mockImplementation(
+      getPaymentRepository({ previousMonthPayments, currentMonthPayments })
+    );
+
+    expect(unusualSpendingsDetector.detect(userId)).toEqual([]);
+  });
 
   it("should detect unusual spendings", () => {
     calendar.getDate.mockReturnValue(new Date("2022-07-28"));
@@ -49,7 +75,7 @@ describe("UnusualSpendingsDetector", () => {
     ]);
   });
 
-  it('should detect unusual spendings when there are more than one spendings per category', () => {
+  it('should detect unusual spendings when there are more than one spendings per category in current month', () => {
     calendar.getDate.mockReturnValue(new Date("2022-07-28"));
     const currentMonthPayments = [
       aPayment({ price: 5000, category: "groceries" }),
@@ -74,25 +100,25 @@ describe("UnusualSpendingsDetector", () => {
       }
     ]);
   });
+
+  it('return no unusual spendings when there are more than one spendings per category in previous month', () => {
+    calendar.getDate.mockReturnValue(new Date("2022-07-28"));
+    const currentMonthPayments = [
+      aPayment({ price: 4500, category: "groceries" }),
+    ];
+
+    const previousMonthPayments = [
+      aPayment({ price: 200, category: "groceries" }),
+      aPayment({ price: 4300, category: "groceries" })
+    ]
+    paymentsRepository.getPaymentsBetweenDates.mockImplementation(
+      getPaymentRepository({ previousMonthPayments, currentMonthPayments })
+    );
+
+
+    expect(unusualSpendingsDetector.detect(userId)).toEqual([]);
+  });
 });
-
-const getPaymentRepository = ({ previousMonthPayments, currentMonthPayments }) => (_userId, startDate, endDate) => {
-  const startDateIsCurrentMonthStartDate =
-    startDate.getTime() === new Date("2022-07-01T00:00:00").getTime();
-  const endDateIsCurrentMonthEndDate =
-    endDate.getTime() === new Date("2022-07-28T00:00:00").getTime();
-
-  if (startDateIsCurrentMonthStartDate && endDateIsCurrentMonthEndDate) {
-    return currentMonthPayments;
-  }
-
-  const isPreviousMonthDates =
-    startDate.getTime() === new Date("2022-06-01T00:00:00").getTime() &&
-    endDate.getTime() === new Date("2022-06-30T00:00:00").getTime();
-  if (isPreviousMonthDates) {
-    return previousMonthPayments;
-  }
-}
 
 function aPayment({ price, category }) {
   return {
